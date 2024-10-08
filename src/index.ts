@@ -13,9 +13,6 @@
 
 export default {
   async fetch(request, env, ctx): Promise<Response> {
-    const base = "https://ecwrd.com";
-    const statusCode = 301;
-
     const url = new URL(request.url);
 
     // This worker will accept requests to "[WORKER_URL]/?image=https://example.com/image.jpg&width=256&height=256&fit=crop&format=webp&quality=75"
@@ -34,10 +31,10 @@ export default {
 
     // Your Worker is responsible for automatic format negotiation. Check the Accept header.
     const accept = request.headers.get("Accept");
-    if (/image\/avif/.test(accept)) {
-      options.cf.image.format = "avif";
-    } else if (/image\/webp/.test(accept)) {
+    if (/image\/webp/.test(accept)) {
       options.cf.image.format = "webp";
+    } else if (/image\/avif/.test(accept)) {
+      options.cf.image.format = "avif";
     }
 
     // Get URL of the original (full size) image to resize.
@@ -49,33 +46,19 @@ export default {
     try {
       // Parse the imageURL as a URL object
       const imageURLObj = new URL(imageURL);
-      const { hostname, pathname } = imageURLObj;
 
       // Now, check if the domain is allowed to be transformed
       const imageDomain = imageURLObj.hostname;
       if (!allowedDomainPatterns.some((pattern) => pattern.test(imageDomain))) {
         return new Response("Domain not allowed", { status: 403 });
       }
-
-      // Also check if the file extension is allowed
-      if (!/\.(jpe?g|png|gif|webp|svg)$/i.test(pathname)) {
-        return new Response("Disallowed file extension", { status: 400 });
-      }
     } catch (error) {
       console.error(error);
       return new Response("Invalid URL", { status: 400 });
     }
 
-    // Convert the options to a comma separated string (e.g., width=256,height=256,fit=crop,format=webp,quality=75)
-    const optionsString = Object.entries(options.cf.image)
-      .map(([key, value]) => `${key}=${value}`)
-      .join(",");
-
-    // Build the URL of the transformed image
-    const transformedURL = `https://ecwrd.com/cdn-cgi/image/${optionsString}/${imageURL}`;
-
     // Now build a request that passes through the request headers
-    const imageRequest = new Request(transformedURL, {
+    const imageRequest = new Request(imageURL, {
       headers: request.headers,
     });
 
