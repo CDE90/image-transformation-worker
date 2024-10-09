@@ -31,10 +31,10 @@ export default {
 
     // Your Worker is responsible for automatic format negotiation. Check the Accept header.
     const accept = request.headers.get("Accept");
-    if (/image\/webp/.test(accept)) {
-      options.cf.image.format = "webp";
-    } else if (/image\/avif/.test(accept)) {
+    if (/image\/avif/.test(accept)) {
       options.cf.image.format = "avif";
+    } else if (/image\/webp/.test(accept)) {
+      options.cf.image.format = "webp";
     }
 
     // Get URL of the original (full size) image to resize.
